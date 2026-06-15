@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>LetsKonnect — Sign up</title>
+  <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-gray-50 py-12">
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-md">
+    <div class="mb-6"><span class="logo-text text-xl"><span class="logo-lets">Lets</span><span class="logo-konnect">Konnect</span></span></div>
+    <h1 class="text-2xl font-bold mb-1">Create your account</h1>
+    <p class="text-sm text-gray-500 mb-6">Join as an organizer or attendee.</p>
+    <% if alert %><div class="flash-alert mb-4"><%= alert %></div><% end %>
+    <%= form_with url: signup_path, method: :post, local: true, class: "space-y-4" do |f| %>
+      <div class="field"><label class="label">Full name</label><input name="name" class="input" required></div>
+      <div class="field"><label class="label">Work email</label><input name="email" type="email" class="input" required></div>
+      <div class="field"><label class="label">Password</label><input name="password" type="password" class="input" required minlength="8"></div>
+      <div class="field"><label class="label">I am a…</label>
+        <div class="grid grid-cols-2 gap-2 mt-1">
+          <label class="flex flex-col p-3 rounded-xl border-2 border-gray-100 cursor-pointer has-[:checked]:border-emerald-400 has-[:checked]:bg-emerald-50">
+            <input type="radio" name="role" value="attendee" class="hidden" checked>
+            <span class="font-semibold text-sm">Attendee</span><span class="text-xs text-gray-500">Discover events</span>
+          </label>
+          <label class="flex flex-col p-3 rounded-xl border-2 border-gray-100 cursor-pointer has-[:checked]:border-emerald-400 has-[:checked]:bg-emerald-50">
+            <input type="radio" name="role" value="organizer" class="hidden">
+            <span class="font-semibold text-sm">Organizer</span><span class="text-xs text-gray-500">Run events</span>
+          </label>
+        </div>
+      </div>
+      <button type="submit" class="btn-primary w-full">Create account</button>
+    <% end %>
+    <p class="mt-4 text-center text-sm text-gray-500">Already have an account? <%= link_to "Sign in", login_path, class: "text-emerald-600 hover:underline" %></p>
+  </div>
+</body></html>

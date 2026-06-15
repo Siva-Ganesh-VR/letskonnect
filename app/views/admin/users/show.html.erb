@@ -1,0 +1,28 @@
+<div class="mb-6 flex items-center gap-3">
+  <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 font-bold text-lg flex items-center justify-center"><%= @user.initials %></div>
+  <div>
+    <h1 class="text-2xl font-bold"><%= @user.name %></h1>
+    <div class="text-gray-500 text-sm"><%= @user.email %> · <span class="badge-gray"><%= @user.role.capitalize %></span></div>
+  </div>
+</div>
+<div class="card p-5 mb-5">
+  <div class="grid grid-cols-3 gap-4 text-sm">
+    <div><div class="text-gray-400">Title</div><div class="font-medium"><%= @user.title.presence || "—" %></div></div>
+    <div><div class="text-gray-400">Company</div><div class="font-medium"><%= @user.company.presence || "—" %></div></div>
+    <div><div class="text-gray-400">Interests</div><div class="font-medium"><%= @user.interests.presence || "—" %></div></div>
+  </div>
+</div>
+<div class="card">
+  <div class="px-5 py-3 border-b border-gray-100 font-semibold">Registrations (<%= @registrations.count %>)</div>
+  <% @registrations.each do |r| %>
+    <div class="px-5 py-3 border-b border-gray-50 last:border-0 flex items-center justify-between text-sm">
+      <span class="font-medium"><%= r.event.name %></span>
+      <div class="flex items-center gap-3">
+        <span class="badge-gray"><%= r.ticket_tier.name %></span>
+        <span class="font-mono text-xs"><%= r.code %></span>
+        <% if r.checked_in? %><span class="badge-green">Checked in</span><% end %>
+      </div>
+    </div>
+  <% end %>
+  <% if @registrations.empty? %><div class="px-5 py-6 text-center text-gray-400 text-sm">No registrations.</div><% end %>
+</div>

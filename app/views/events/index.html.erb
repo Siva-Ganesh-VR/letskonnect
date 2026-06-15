@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>LetsKonnect — Discover Events</title>
+  <%= stylesheet_link_tag "application" %>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <header class="bg-white border-b border-gray-100 px-8 py-4 flex justify-between items-center">
+    <span class="logo-text text-xl"><span class="logo-lets">Lets</span><span class="logo-konnect">Konnect</span></span>
+    <% if signed_in? %>
+      <%= link_to current_user.organizer? ? organizer_root_path : attendee_root_path, class: "btn-outline text-sm" do %>My dashboard<% end %>
+    <% else %>
+      <%= link_to login_path, class: "btn-primary text-sm" do %>Sign in<% end %>
+    <% end %>
+  </header>
+  <main class="max-w-5xl mx-auto px-6 py-10">
+    <h1 class="text-3xl font-bold mb-6">Upcoming events</h1>
+    <div class="grid grid-cols-3 gap-5">
+      <% @events.each do |ev| %>
+        <%= link_to public_event_path(ev.slug), class: "card overflow-hidden hover:shadow-md transition-shadow group" do %>
+          <% if ev.hero_image.present? %>
+            <img src="<%= ev.hero_image %>" alt="" class="h-40 w-full object-cover">
+          <% end %>
+          <div class="p-4">
+            <span class="badge-gray text-xs mb-2 block w-fit"><%= ev.event_type %></span>
+            <div class="font-bold text-gray-900 group-hover:text-emerald-600 text-lg"><%= ev.name %></div>
+            <div class="text-sm text-gray-500 mt-1"><%= ev.date_range %></div>
+            <div class="text-sm text-gray-400"><%= ev.location %></div>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  </main>
+</body>
+</html>

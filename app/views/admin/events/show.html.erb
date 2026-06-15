@@ -1,0 +1,24 @@
+<div class="mb-6">
+  <h1 class="text-2xl font-bold"><%= @event.name %></h1>
+  <p class="text-gray-500 text-sm"><%= @event.date_range %> · <%= @event.location %></p>
+</div>
+<div class="grid grid-cols-3 gap-4 mb-5">
+  <div class="stat-card"><div class="stat-label">Registrations</div><div class="stat-value"><%= @event.registration_count %></div></div>
+  <div class="stat-card"><div class="stat-label">Checked in</div><div class="stat-value"><%= @event.checked_in_count %></div></div>
+  <div class="stat-card"><div class="stat-label">Revenue</div><div class="stat-value">$<%= number_with_delimiter(@event.revenue_cents / 100) %></div></div>
+</div>
+<div class="table-wrapper">
+  <table class="data-table">
+    <thead><tr><th>Attendee</th><th>Ticket</th><th>Code</th><th>Status</th></tr></thead>
+    <tbody>
+      <% @registrations.each do |reg| %>
+        <tr>
+          <td><div class="font-medium"><%= reg.user.name %></div><div class="text-xs text-gray-400"><%= reg.user.email %></div></td>
+          <td><%= reg.ticket_tier.name %></td>
+          <td><span class="font-mono text-xs font-bold"><%= reg.code %></span></td>
+          <td><% if reg.checked_in? %><span class="badge-green">Checked in</span><% else %><span class="badge-gray">Registered</span><% end %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

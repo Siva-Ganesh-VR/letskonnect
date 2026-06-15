@@ -1,0 +1,16 @@
+<div class="mb-6"><h1 class="text-2xl font-bold">Subscriptions</h1></div>
+<div class="table-wrapper">
+  <table class="data-table">
+    <thead><tr><th>Tenant</th><th>Plan</th><th>MRR</th><th>Status</th></tr></thead>
+    <tbody>
+      <% @tenants.each do |t| %>
+        <tr>
+          <td><%= link_to t.name, admin_tenant_path(t), class: "font-medium text-emerald-600 hover:underline" %></td>
+          <td><span class="badge-gray"><%= t.plan.capitalize %></span></td>
+          <td class="font-semibold"><%= t.monthly_display %></td>
+          <td><span class="<%= t.status == 'active' ? 'badge-green' : 'badge-amber' %>"><%= t.status.capitalize %></span></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

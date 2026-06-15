@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title><%= @event.name %> — LetsKonnect</title>
+  <%= stylesheet_link_tag "application" %>
+  <%= csrf_meta_tags %>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <header class="bg-white border-b border-gray-100 px-8 py-4 flex justify-between items-center">
+    <%= link_to public_events_path, class: "logo-text text-xl" do %>
+      <span class="logo-lets">Lets</span><span class="logo-konnect">Konnect</span>
+    <% end %>
+    <% if signed_in? %>
+      <%= link_to current_user.organizer? ? organizer_root_path : attendee_root_path, class: "btn-outline text-sm" do %>My dashboard<% end %>
+    <% else %>
+      <%= link_to login_path, class: "btn-primary text-sm" do %>Sign in<% end %>
+    <% end %>
+  </header>
+
+  <!-- Hero -->
+  <div class="bg-gray-900 text-white">
+    <% if @event.hero_image.present? %>
+      <img src="<%= @event.hero_image %>" alt="" class="w-full h-56 object-cover opacity-70">
+    <% end %>
+    <div class="max-w-5xl mx-auto px-8 py-8">
+      <span class="badge-green mb-3 inline-block"><%= @event.event_type %></span>
+      <h1 class="text-4xl font-extrabold"><%= @event.name %></h1>
+      <% if @event.tagline.present? %><p class="text-white/80 text-lg mt-2"><%= @event.tagline %></p><% end %>
+      <p class="text-white/60 text-sm mt-2"><%= @event.date_range %> · <%= @event.location %></p>
+    </div>
+  </div>
+
+  <div class="max-w-5xl mx-auto px-8 py-8 grid grid-cols-3 gap-8">
+    <div class="col-span-2 space-y-8">
+      <% if @my_registration %>
+        <div class="ticket-badge">
+          <div class="ticket-body">
+            <div class="text-xs text-gray-400 uppercase font-medium">Your badge — <%= @my_registration.ticket_tier.name %></div>
+            <div class="font-bold text-gray-900 text-lg mt-0.5"><%= @event.name %></div>
+            <div class="text-sm text-gray-500"><%= @event.date_range %> · <%= @event.location %></div>
+            <div class="ticket-code mt-3"><%= @my_registration.code %></div>
+          </div>
+          <div class="ticket-qr">
+            <div class="w-20 h-20 bg-gray-900 rounded p-1 flex items-center justify-center text-white/30 text-xs">QR</div>
+            <span class="text-xs text-gray-400">Scan at door</span>
+          </div>
+        </div>
+      <% end %>
+
+      <% if @event.description.present? %>
+        <div><h2 class="text-xl font-bold mb-2">About</h2><p class="text-gray-600 whitespace-pre-line"><%= @event.description %></p></div>
+      <% end %>
+
+      <% if @sessions.any? %>
+        <div>
+          <h2 class="text-xl font-bold mb-3">Agenda</h2>
+          <% @sessions.group_by { |s| s.starts_at.to_s[0,10] }.each do |day, day_sessions| %>
+            <div class="mb-4">
+              <div class="text-xs font-semibold text-gray-400 uppercase mb-2"><%= Date.parse(day).strftime("%A, %B %-d") rescue day %></div>
+              <% day_sessions.each do |sess| %>
+                <div class="card p-4 flex gap-4 mb-2">
+                  <div class="w-14 font-mono text-sm font-semibold text-gray-400 flex-shrink-0"><%= sess.starts_at.to_s[11,5] rescue "" %></div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="font-semibold"><%= sess.title %></span>
+                      <span class="badge-blue text-xs"><%= sess.kind %></span>
+                    </div>
+                    <div class="text-xs text-gray-400 mt-0.5">
+                      <%= sess.track %><%= sess.room.present? ? " · #{sess.room}" : "" %>
+                      <%= sess.speaker&.name.present? ? " · #{sess.speaker.name}, #{sess.speaker.title} at #{sess.speaker.company}" : "" %>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <% if @speakers.any? %>
+        <div>
+          <h2 class="text-xl font-bold mb-3">Speakers</h2>
+          <div class="grid grid-cols-2 gap-3">
+            <% @speakers.each do |sp| %>
+              <div class="card p-4 flex items-center gap-3">
+                <div class="avatar-lg"><%= sp.name.split(" ").map{|w|w[0]}.join.upcase.first(2) %></div>
+                <div><div class="font-semibold"><%= sp.name %></div><div class="text-xs text-gray-400"><%= sp.title %><%= sp.company.present? ? ", #{sp.company}" : "" %></div></div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Ticket sidebar -->
+    <div class="sticky top-4 h-fit">
+      <div class="card p-5">
+        <h2 class="font-bold text-gray-900 mb-4">Tickets</h2>
+        <% if @my_registration %>
+          <div class="badge-green w-full text-center py-2 text-sm font-medium mb-3">You're registered ✓</div>
+        <% end %>
+        <div class="space-y-3">
+          <% @tiers.each do |tier| %>
+            <div class="border-b border-gray-100 pb-3 last:border-0 last:pb-0">
+              <div class="flex justify-between items-start">
+                <div>
+                  <div class="font-medium"><%= tier.name %></div>
+                  <div class="text-xs text-gray-400"><%= tier.sold_out? ? "Sold out" : "#{tier.remaining} left" %></div>
+                </div>
+                <div class="font-semibold text-gray-900"><%= tier.price_display %></div>
+              </div>
+              <% unless @my_registration %>
+                <% if tier.sold_out? %>
+                  <button disabled class="btn-outline w-full mt-2 opacity-50">Sold out</button>
+                <% elsif signed_in? %>
+                  <%= button_to "Register", event_register_path(@event.slug), params: { tier_id: tier.id }, method: :post, class: "btn-green w-full mt-2 text-sm" %>
+                <% else %>
+                  <%= link_to "Sign in to register", login_path, class: "btn-primary w-full mt-2 text-center text-sm block" %>
+                <% end %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

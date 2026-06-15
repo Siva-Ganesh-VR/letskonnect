@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Start Rails + Tailwind CSS watcher concurrently
+
+if command -v foreman >/dev/null 2>&1; then
+  exec foreman start -f Procfile.dev "$@"
+else
+  # No foreman — run Tailwind in background, Rails in foreground
+  echo "Starting Tailwind watcher in background..."
+  bundle exec rails tailwindcss:watch &
+  TAILWIND_PID=$!
+
+  echo "Starting Rails server on http://localhost:3000"
+  bundle exec rails server -p 3000
+
+  # Cleanup on exit
+  kill $TAILWIND_PID 2>/dev/null
+fi

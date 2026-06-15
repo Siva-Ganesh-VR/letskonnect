@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LetsKonnect — Sign in</title>
+  <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+</head>
+<body  style="margin: 0; padding: 0;">
+  <div class="min-h-screen flex">
+    <!-- Left: form -->
+    <div class="flex-1 flex flex-col justify-center px-8 py-12 bg-white max-w-lg">
+      <div class="mb-0">
+        <span class="logo-text text-2xl"><span class="logo-lets">Lets</span><span class="logo-konnect">Konnect</span></span>
+      </div>
+
+      <h1 class="text-2xl font-bold text-gray-900 mb-1">Welcome back</h1>
+      <p class="text-sm text-gray-500 mb-8" style="margin-top: 0px;">Sign in to your account to continue.</p>
+
+      <% if alert %>
+        <div class="flash-alert mb-4"><%= alert %></div>
+      <% end %>
+
+      <!-- Demo role buttons -->
+      <!--<div class="mb-6">
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Demo sign-in — click to explore</p>
+        <div class="grid grid-cols-3 gap-2">
+          <%= button_to demo_login_path, params: { role: "organizer" }, method: :post,
+              class: "flex flex-col items-start p-3 rounded-xl border-2 border-gray-100 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-left" do %>
+            <span class="text-sm font-semibold text-gray-800">Organizer</span>
+            <span class="text-xs text-gray-500">Run events</span>
+          <% end %>
+          <%= button_to demo_login_path, params: { role: "attendee" }, method: :post,
+              class: "flex flex-col items-start p-3 rounded-xl border-2 border-gray-100 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-left" do %>
+            <span class="text-sm font-semibold text-gray-800">Attendee</span>
+            <span class="text-xs text-gray-500">Discover</span>
+          <% end %>
+          <%= button_to demo_login_path, params: { role: "admin" }, method: :post,
+              class: "flex flex-col items-start p-3 rounded-xl border-2 border-gray-100 hover:border-emerald-300 hover:bg-emerald-50 transition-all text-left" do %>
+            <span class="text-sm font-semibold text-gray-800">Super Admin</span>
+            <span class="text-xs text-gray-500">Platform ops</span>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="relative mb-6">
+        <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-200"></div></div>
+        <div class="relative flex justify-center"><span class="bg-white px-3 text-xs text-gray-400">or sign in with email</span></div>
+      </div>-->
+
+      <%= form_with url: login_path, method: :post, local: true do |f| %>
+        <div class="space-y-4">
+          <div class="field">
+            <label class="label">Email</label>
+            <%= f.email_field :email, class: "input", placeholder: "you@example.com", autocomplete: "email" %>
+          </div>
+          <div class="field">
+            <label class="label">Password</label>
+            <%= f.password_field :password, class: "input", placeholder: "enter password", autocomplete: "current-password" %>
+          </div>
+          <div class="field"><label class="label">I am a…</label>
+            <div class="grid grid-cols-3 gap-2 mt-1">
+              <label class="flex flex-col p-3 rounded-xl border-2 border-gray-100 cursor-pointer has-[:checked]:border-emerald-400 has-[:checked]:bg-emerald-50">
+                <%= f.radio_button :role, "organizer", checked: true, class: "hidden" %>
+                <span class="font-semibold text-sm">Organizer</span><span class="text-xs text-gray-500">Run events</span>
+              </label>
+              <label class="flex flex-col p-3 rounded-xl border-2 border-gray-100 cursor-pointer has-[:checked]:border-emerald-400 has-[:checked]:bg-emerald-50">
+                <%= f.radio_button :role, "attendee", class: "hidden" %>
+                <span class="font-semibold text-sm">Attendee</span><span class="text-xs text-gray-500">Discover events</span>
+              </label>
+              <label class="flex flex-col p-3 rounded-xl border-2 border-gray-100 cursor-pointer has-[:checked]:border-emerald-400 has-[:checked]:bg-emerald-50">
+                <%= f.radio_button :role, "admin", class: "hidden" %>
+                <span class="font-semibold text-sm">Super Admin</span><span class="text-xs text-gray-500">Platform operations</span>
+              </label>
+            </div>
+          </div>
+          <%= f.submit "Sign in", class: "btn-primary w-full mt-2" %>
+        </div>
+      <% end %>
+
+      <p class="mt-6 text-center text-sm text-gray-500">
+        No account? <%= link_to "Create one free", signup_path, class: "text-emerald-600 font-medium hover:underline" %>
+      </p>
+    </div>
+
+    <!-- Right: hero panel -->
+    <div class="hidden lg:flex flex-1 bg-gray-900 flex-col justify-end p-12 text-white">
+      <blockquote class="text-2xl font-semibold leading-snug max-w-md mb-4">
+        "We ran our 3,000-person conference start to finish on LetsKonnect. The team didn't need a single other tool."
+      </blockquote>
+      <div class="text-sm text-white/60">Priya Raman · Head of Events, FutureStack</div>
+    </div>
+  </div>
+</body>
+</html>

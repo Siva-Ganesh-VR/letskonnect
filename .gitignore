@@ -1,0 +1,9 @@
+.bundle/
+log/*.log
+tmp/
+.env
+*.sqlite3
+node_modules/
+public/assets/
+public/packs/
+.DS_Store

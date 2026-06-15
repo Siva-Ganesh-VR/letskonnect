@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+set -e
+
+GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'; NC='\033[0m'
+info()  { echo -e "${GREEN}▶ $1${NC}"; }
+warn()  { echo -e "${YELLOW}⚠  $1${NC}"; }
+error() { echo -e "${RED}✗  $1${NC}"; exit 1; }
+step()  { echo -e "\n${CYAN}── $1 ──${NC}"; }
+
+echo ""
+echo "╔══════════════════════════════════════════════════════╗"
+echo "║         LetsKonnect — Rails 7.1 Setup Script         ║"
+echo "╚══════════════════════════════════════════════════════╝"
+echo ""
+
+# ── Check Ruby ────────────────────────────────────────────────────────────
+step "Checking prerequisites"
+command -v ruby  >/dev/null 2>&1 || error "Ruby not found. Install from https://www.ruby-lang.org (>= 3.1)"
+RUBY_VER=$(ruby -e "puts RUBY_VERSION")
+info "Ruby $RUBY_VER found ✓"
+
+command -v psql >/dev/null 2>&1 || error "PostgreSQL not found. Install Postgres and make sure psql is in PATH."
+PSQL_VER=$(psql --version | head -1)
+info "$PSQL_VER found ✓"
+
+# ── Install Bundler ────────────────────────────────────────────────────────
+step "Installing Bundler"
+gem list bundler | grep -q bundler || gem install bundler --no-document
+info "Bundler ready ✓"
+
+# ── .env file ─────────────────────────────────────────────────────────────
+step "Environment file"
+if [ ! -f .env ]; then
+  cp .env.example .env
+  warn "Created .env from .env.example"
+  warn "Default DB: postgres/postgres@localhost:5432"
+  warn "Edit .env if your Postgres credentials are different"
+else
+  info ".env already exists ✓"
+fi
+
+# Load env vars
+set -a
+source .env
+set +a
+
+# ── Install gems ───────────────────────────────────────────────────────────
+step "Installing gems (bundle install)"
+bundle install
+info "Gems installed ✓"
+
+# ── Database ───────────────────────────────────────────────────────────────
+step "Setting up database"
+bundle exec rails db:create  && info "Database created ✓"  || warn "Database may already exist, continuing..."
+bundle exec rails db:migrate && info "Migrations complete ✓"
+bundle exec rails db:seed    && info "Demo data seeded ✓"
+
+# ── Tailwind CSS ───────────────────────────────────────────────────────────
+step "Building Tailwind CSS"
+bundle exec rails tailwindcss:build && info "CSS built ✓" || warn "Tailwind build skipped — will build on first request"
+
+# ── Done ──────────────────────────────────────────────────────────────────
+echo ""
+echo "╔══════════════════════════════════════════════════════╗"
+echo "║                  Setup complete! 🎉                  ║"
+echo "╠══════════════════════════════════════════════════════╣"
+echo "║                                                      ║"
+echo "║  Start the server:                                   ║"
+echo "║    bin/dev                                           ║"
+echo "║                                                      ║"
+echo "║  Open: http://localhost:3000                         ║"
+echo "║                                                      ║"
+echo "║  Demo logins (password: demo1234)                    ║"
+echo "║  Organizer: organizer@demo.letskonnect.app           ║"
+echo "║  Attendee:  attendee@demo.letskonnect.app            ║"
+echo "║  Admin:     admin@demo.letskonnect.app               ║"
+echo "║                                                      ║"
+echo "╚══════════════════════════════════════════════════════╝"
+echo ""

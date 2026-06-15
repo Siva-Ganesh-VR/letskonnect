@@ -1,0 +1,332 @@
+<div class="flex items-start justify-between mb-6">
+  <div>
+    <div class="flex items-center gap-2 mb-1">
+      <% if @event.live? %>
+        <span class="badge-green flex items-center gap-1.5"><span class="live-dot"></span>Live</span>
+      <% elsif @event.published? %>
+        <span class="badge-green">Published</span>
+      <% elsif @event.status == "draft" %>
+        <span class="badge-gray">Draft</span>
+      <% else %>
+        <span class="badge-amber">Archived</span>
+      <% end %>
+      <span class="text-sm text-gray-400"><%= @event.event_type %></span>
+    </div>
+    <h1 class="text-2xl font-bold text-gray-900"><%= @event.name %></h1>
+    <p class="text-gray-500 text-sm mt-0.5"><%= @event.date_range %> · <%= @event.location %></p>
+  </div>
+  <div class="flex items-center gap-2">
+    <%= link_to public_event_path(@event.slug), target: "_blank", class: "btn-outline" do %>
+      View microsite
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+    <% end %>
+    <% if @event.published? %>
+      <%= button_to "Unpublish", unpublish_organizer_event_path(@event), method: :patch, class: "btn-outline" %>
+    <% else %>
+      <%= button_to "Publish", publish_organizer_event_path(@event), method: :patch, class: "btn-green" %>
+    <% end %>
+    <%= link_to "Edit", edit_organizer_event_path(@event), class: "btn-outline" %>
+  </div>
+</div>
+
+<!-- Quick stats -->
+<div class="grid grid-cols-4 gap-4 mb-6">
+  <div class="stat-card">
+    <div class="stat-label">Registered</div>
+    <div class="stat-value"><%= @event.registration_count %></div>
+    <% if @event.capacity > 0 %>
+      <div class="stat-sub">of <%= @event.capacity %> capacity</div>
+    <% end %>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Checked in</div>
+    <div class="stat-value"><%= @event.checked_in_count %></div>
+    <% if @event.registration_count > 0 %>
+      <div class="stat-sub"><%= ((@event.checked_in_count.to_f / @event.registration_count) * 100).round %>% rate</div>
+    <% end %>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Revenue</div>
+    <div class="stat-value">$<%= number_with_delimiter(@event.revenue_cents / 100) %></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Ticket tiers</div>
+    <div class="stat-value"><%= @tiers.count %></div>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div x-data="{ tab: '<%= params[:anchor] || 'tickets' %>' }">
+  <div class="border-b border-gray-200 mb-5">
+    <nav class="flex gap-0 -mb-px">
+      <% [["tickets","Tickets"],["agenda","Agenda"],["attendees","Attendees"],["checkin","Check-in"],["analytics","Analytics"]].each do |key, label| %>
+        <button @click="tab='<%= key %>'"
+          :class="tab === '<%= key %>' ? 'border-b-2 border-emerald-600 text-emerald-600 font-medium' : 'text-gray-500 hover:text-gray-700'"
+          class="px-4 py-2.5 text-sm transition-colors">
+          <%= label %>
+        </button>
+      <% end %>
+    </nav>
+  </div>
+
+  <!-- Tickets tab -->
+  <div x-show="tab === 'tickets'" x-cloak>
+    <div class="grid grid-cols-3 gap-5">
+      <div class="col-span-2 space-y-3">
+        <% @tiers.each do |tier| %>
+          <div class="card p-4 flex items-center gap-4">
+            <div class="flex-1">
+              <div class="font-medium text-gray-900"><%= tier.name %></div>
+              <div class="text-sm text-gray-400 mt-0.5"><%= tier.sold_count %> of <%= tier.quantity %> sold</div>
+              <div class="progress-track mt-2">
+                <div class="progress-fill" style="width: <%= [[tier.quantity > 0 ? (tier.sold_count.to_f/tier.quantity*100) : 0, 0].max, 100].min.round %>%"></div>
+              </div>
+            </div>
+            <div class="text-right flex-shrink-0">
+              <div class="font-semibold text-gray-900"><%= tier.price_display %></div>
+              <div class="text-xs text-gray-400"><%= tier.remaining %> left</div>
+            </div>
+            <% if tier.registrations.empty? %>
+              <%= button_to organizer_event_ticket_tier_path(@event, tier), method: :delete,
+                  data: { confirm: "Delete this tier?" }, class: "btn-danger text-xs px-3 py-1.5" do %>
+                Delete
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+
+        <div class="card p-4">
+          <h3 class="font-semibold text-gray-900 mb-3">Add a ticket tier</h3>
+          <%= form_with url: organizer_event_ticket_tiers_path(@event), method: :post, local: true do |f| %>
+            <div class="grid grid-cols-4 gap-3">
+              <div class="col-span-2">
+                <input name="name" class="input" placeholder="Tier name (e.g. VIP)" required>
+              </div>
+              <input name="price" type="number" step="0.01" min="0" class="input" placeholder="Price $">
+              <input name="quantity" type="number" min="1" class="input" placeholder="Qty" value="100">
+            </div>
+            <button type="submit" class="btn-primary mt-3">Add tier</button>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="card h-fit p-4">
+        <h3 class="font-semibold text-gray-900 mb-3">Tier summary</h3>
+        <% @tiers.each do |t| %>
+          <div class="flex justify-between text-sm py-2 border-b border-gray-50 last:border-0">
+            <span class="text-gray-600"><%= t.name %></span>
+            <span class="font-medium"><%= t.sold_count %> sold</span>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agenda tab -->
+  <div x-show="tab === 'agenda'" x-cloak>
+    <div class="grid grid-cols-3 gap-5">
+      <div class="col-span-2 space-y-3">
+        <% @sessions.each do |sess| %>
+          <div class="card p-4 flex items-start gap-3">
+            <div class="w-16 flex-shrink-0 font-mono text-sm font-semibold text-gray-500">
+              <%= sess.starts_at.to_s[11,5] rescue sess.starts_at %>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <span class="font-medium text-gray-900"><%= sess.title %></span>
+                <span class="badge-blue"><%= sess.kind %></span>
+              </div>
+              <div class="text-xs text-gray-400 mt-0.5">
+                <%= sess.track %><%= sess.room.present? ? " · #{sess.room}" : "" %>
+                <%= sess.speaker&.name.present? ? " · #{sess.speaker.name}" : "" %>
+              </div>
+            </div>
+            <%= button_to organizer_event_session_path(@event, sess), method: :delete, class: "btn-icon flex-shrink-0" do %>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            <% end %>
+          </div>
+        <% end %>
+
+        <div class="card p-4">
+          <h3 class="font-semibold text-gray-900 mb-3">Add a session</h3>
+          <%= form_with url: organizer_event_sessions_path(@event), method: :post, local: true do |f| %>
+            <div class="grid grid-cols-2 gap-3">
+              <input name="title" class="input col-span-2" placeholder="Session title" required>
+              <input name="track" class="input" placeholder="Track (e.g. Main stage)" value="Main stage">
+              <select name="kind" class="input">
+                <% EventSession::KINDS.each do |k| %><option><%= k %></option><% end %>
+              </select>
+              <input name="starts_at" type="datetime-local" class="input" required>
+              <input name="ends_at" type="datetime-local" class="input" required>
+              <select name="speaker_id" class="input">
+                <option value="">No speaker</option>
+                <% @speakers.each do |sp| %><option value="<%= sp.id %>"><%= sp.name %></option><% end %>
+              </select>
+              <input name="room" class="input" placeholder="Room">
+            </div>
+            <button type="submit" class="btn-primary mt-3">Add session</button>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="card h-fit p-4">
+        <h3 class="font-semibold text-gray-900 mb-3">Speakers</h3>
+        <% @speakers.each do |sp| %>
+          <div class="flex items-center gap-2 py-2 border-b border-gray-50 last:border-0">
+            <div class="avatar"><%= sp.name.split(" ").map{|w|w[0]}.join.upcase.first(2) %></div>
+            <div class="text-sm">
+              <div class="font-medium"><%= sp.name %></div>
+              <div class="text-gray-400 text-xs"><%= sp.title %><%= sp.company.present? ? ", #{sp.company}" : "" %></div>
+            </div>
+          </div>
+        <% end %>
+        <%= form_with url: organizer_event_speakers_path(@event), method: :post, local: true, class: "mt-3 space-y-2" do |f| %>
+          <input name="name" class="input" placeholder="Speaker name" required>
+          <input name="title" class="input" placeholder="Job title">
+          <input name="company" class="input" placeholder="Company">
+          <button type="submit" class="btn-outline w-full">Add speaker</button>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Attendees tab -->
+  <div x-show="tab === 'attendees'" x-cloak>
+    <%= link_to attendees_organizer_event_path(@event), class: "hidden" %>
+    <div class="mb-4">
+      <input id="attendee-search" class="input max-w-sm" placeholder="Search name, email, code…"
+        data-action="input->search#filter">
+    </div>
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead><tr><th>Attendee</th><th>Ticket</th><th>Code</th><th>Status</th><th>Registered</th></tr></thead>
+        <tbody>
+          <% @event.registrations.includes(:user, :ticket_tier).order(created_at: :desc).each do |reg| %>
+            <tr>
+              <td>
+                <div class="flex items-center gap-2">
+                  <div class="avatar"><%= reg.user.initials %></div>
+                  <div>
+                    <div class="font-medium text-gray-900"><%= reg.user.name %></div>
+                    <div class="text-xs text-gray-400"><%= reg.user.email %></div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="badge-gray"><%= reg.ticket_tier.name %></span></td>
+              <td><span class="font-mono text-xs font-bold"><%= reg.code %></span></td>
+              <td>
+                <% if reg.checked_in? %>
+                  <span class="badge-green">Checked in</span>
+                <% else %>
+                  <span class="badge-amber">Registered</span>
+                <% end %>
+              </td>
+              <td class="text-gray-400 text-xs"><%= reg.created_at.strftime("%b %-d, %Y") %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Check-in tab -->
+  <div x-show="tab === 'checkin'" x-cloak>
+    <div class="grid grid-cols-2 gap-5">
+      <div class="checkin-console">
+        <div class="text-xs font-semibold text-white/50 uppercase tracking-widest mb-1">Door scanner</div>
+        <h2 class="text-xl font-bold mb-1">Scan or type a badge code</h2>
+        <p class="text-white/60 text-sm mb-5">QR scanner guns type the code and press Enter. Duplicates are rejected automatically.</p>
+
+        <div id="checkin-form" class="flex gap-2">
+          <input id="checkin-input" type="text" placeholder="LK-XXXX-XXXX"
+            class="flex-1 rounded-lg bg-white/10 border border-white/20 px-3 py-3 font-mono text-lg tracking-widest text-white placeholder:text-white/30 focus:outline-none focus:border-emerald-400 uppercase"
+            autocomplete="off" autofocus>
+          <button onclick="doCheckin()" class="btn-green px-5">Check in</button>
+        </div>
+
+        <div id="checkin-result" class="mt-4 hidden">
+        </div>
+      </div>
+
+      <div>
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Recent scans</div>
+        <div id="scan-log" class="space-y-2">
+          <div class="card p-4 text-sm text-gray-400">Scans will appear here as people arrive.</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const EVENT_ID = "<%= @event.id %>";
+      const CHECKIN_PATH = "<%= scan_organizer_event_checkin_index_path(@event) %>";
+      const CSRF = document.querySelector('meta[name="csrf-token"]')?.content;
+
+      async function doCheckin() {
+        const input = document.getElementById('checkin-input');
+        const code = input.value.trim().toUpperCase();
+        if (!code) return;
+        input.value = '';
+
+        const res = await fetch(CHECKIN_PATH, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF },
+          body: JSON.stringify({ code })
+        });
+        const data = await res.json();
+
+        const log = document.getElementById('scan-log');
+        const entry = document.createElement('div');
+        entry.className = `card flex items-center gap-3 p-3 ${data.ok ? '' : 'border-red-200'}`;
+        const dot = data.ok ? 'bg-emerald-500' : 'bg-red-500';
+        entry.innerHTML = `
+          <span class="w-2.5 h-2.5 rounded-full ${dot} flex-shrink-0"></span>
+          <div class="flex-1 text-sm">
+            ${data.ok
+              ? `<span class="font-medium">${data.name}</span> <span class="text-gray-400">· ${data.tier}</span>`
+              : `<span class="text-red-600">${data.error}</span>`}
+            <div class="font-mono text-xs text-gray-400">${data.code || code}</div>
+          </div>
+          <span class="text-xs text-gray-400">${data.time || new Date().toLocaleTimeString()}</span>`;
+
+        const placeholder = log.querySelector('div.card.p-4.text-sm');
+        if (placeholder) placeholder.remove();
+        log.insertBefore(entry, log.firstChild);
+        input.focus();
+      }
+
+      document.getElementById('checkin-input')?.addEventListener('keydown', e => {
+        if (e.key === 'Enter') doCheckin();
+      });
+    </script>
+  </div>
+
+  <!-- Analytics tab -->
+  <div x-show="tab === 'analytics'" x-cloak>
+    <div class="grid grid-cols-4 gap-4 mb-5">
+      <div class="stat-card"><div class="stat-label">Registrations</div><div class="stat-value"><%= @event.registration_count %></div></div>
+      <div class="stat-card"><div class="stat-label">Checked in</div><div class="stat-value"><%= @event.checked_in_count %></div></div>
+      <div class="stat-card">
+        <div class="stat-label">Attendance rate</div>
+        <div class="stat-value"><%= @event.registration_count > 0 ? ((@event.checked_in_count.to_f/@event.registration_count)*100).round : 0 %>%</div>
+      </div>
+      <div class="stat-card"><div class="stat-label">Revenue</div><div class="stat-value">$<%= number_with_delimiter(@event.revenue_cents/100) %></div></div>
+    </div>
+
+    <div class="card p-5">
+      <h3 class="font-semibold text-gray-900 mb-4">Sales by ticket type</h3>
+      <% @tiers.each do |t| %>
+        <div class="mb-4">
+          <div class="flex justify-between text-sm mb-1">
+            <span class="font-medium"><%= t.name %></span>
+            <span class="text-gray-500"><%= t.sold_count %>/<%= t.quantity %> · $<%= number_with_delimiter(t.sold_count * t.price_cents / 100) %></span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" style="width: <%= t.quantity > 0 ? [[t.sold_count.to_f/t.quantity*100, 0].max, 100].min.round : 0 %>%"></div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>

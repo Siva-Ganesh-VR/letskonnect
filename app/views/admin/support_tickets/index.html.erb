@@ -1,0 +1,17 @@
+<div class="mb-6"><h1 class="text-2xl font-bold">Support tickets</h1></div>
+<div class="table-wrapper">
+  <table class="data-table">
+    <thead><tr><th>Subject</th><th>Tenant</th><th>Submitted by</th><th>Priority</th><th>Status</th></tr></thead>
+    <tbody>
+      <% @tickets.each do |t| %>
+        <tr>
+          <td class="font-medium"><%= t.subject %></td>
+          <td class="text-gray-500"><%= t.tenant&.name %></td>
+          <td class="text-gray-400 text-xs"><%= t.submitted_by %></td>
+          <td><span class="<%= t.priority == 'urgent' ? 'badge-red' : t.priority == 'high' ? 'badge-amber' : 'badge-gray' %>"><%= t.priority.upcase %></span></td>
+          <td><span class="<%= t.status == 'open' ? 'badge-blue' : t.status == 'resolved' ? 'badge-green' : 'badge-gray' %>"><%= t.status.capitalize %></span></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

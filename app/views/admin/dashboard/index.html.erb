@@ -1,0 +1,100 @@
+<div class="mb-6">
+  <h1 class="text-3xl font-bold text-gray-900">Platform overview</h1>
+  <p class="text-gray-500 text-sm mt-1">Tenants, revenue, and support across the entire LetsKonnect platform.</p>
+</div>
+
+<!-- 5 stat cards matching screenshot -->
+<div class="grid grid-cols-5 gap-4 mb-6">
+  <div class="stat-card">
+    <div class="stat-label text-xs uppercase tracking-wide text-gray-400 flex justify-between">
+      ACTIVE TENANTS
+      <svg class="w-4 h-4 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"/></svg>
+    </div>
+    <div class="stat-value"><%= @active_tenants %></div>
+    <div class="text-xs text-gray-400"><%= @total_tenants %> total</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label text-xs uppercase tracking-wide text-gray-400 flex justify-between">
+      MONTHLY RECURRING REVENUE
+      <svg class="w-4 h-4 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+    </div>
+    <div class="stat-value">$<%= number_with_delimiter(@mrr_cents / 100) %></div>
+    <div class="stat-sub">monthly recurring</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label text-xs uppercase tracking-wide text-gray-400 flex justify-between">
+      ACTIVE SUBSCRIPTIONS
+      <svg class="w-4 h-4 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+    </div>
+    <div class="stat-value"><%= @active_subs %></div>
+    <% if @past_due > 0 %>
+      <div class="text-xs text-amber-600"><%= @past_due %> past due</div>
+    <% end %>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label text-xs uppercase tracking-wide text-gray-400 flex justify-between">
+      EVENTS HOSTED
+      <svg class="w-4 h-4 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+    </div>
+    <div class="stat-value"><%= @events_hosted %></div>
+    <div class="text-xs text-gray-400"><%= @live_this_week %> live this week</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label text-xs uppercase tracking-wide text-gray-400 flex justify-between">
+      OPEN SUPPORT TICKETS
+      <svg class="w-4 h-4 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+    </div>
+    <div class="stat-value"><%= @open_tickets %></div>
+    <% if @urgent_tickets > 0 %>
+      <div class="text-xs text-red-600"><%= @urgent_tickets %> urgent</div>
+    <% end %>
+  </div>
+</div>
+
+<div class="grid grid-cols-2 gap-5">
+  <!-- Recent tenants -->
+  <div class="card">
+    <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
+      <h2 class="font-semibold text-gray-900">Recent tenants</h2>
+      <%= link_to "View all", admin_tenants_path, class: "text-sm text-emerald-600 hover:underline" %>
+    </div>
+    <div>
+      <% @tenants.each do |t| %>
+        <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-50 last:border-0">
+          <div>
+            <div class="font-medium text-gray-900"><%= t.name %></div>
+            <div class="text-xs text-gray-400"><%= t.plan.capitalize %> · joined <%= t.joined_on&.strftime("%Y-%m-%d") %></div>
+          </div>
+          <div class="font-semibold text-gray-900 text-sm"><%= t.monthly_display %></div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Urgent tickets -->
+  <div class="card">
+    <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
+      <h2 class="font-semibold text-gray-900">Urgent & high-priority tickets</h2>
+      <%= link_to "View all", admin_support_tickets_path, class: "text-sm text-emerald-600 hover:underline" %>
+    </div>
+    <div>
+      <% @support_tickets.each do |t| %>
+        <div class="px-5 py-3.5 border-b border-gray-50 last:border-0">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1 min-w-0">
+              <div class="font-medium text-gray-900 truncate"><%= t.subject %></div>
+              <div class="text-xs text-gray-400 mt-0.5">
+                <%= t.tenant&.name || "Unknown" %> · <%= t.submitted_by %>
+              </div>
+            </div>
+            <% badge_cls = t.priority == "urgent" ? "badge-red" : t.priority == "high" ? "badge-amber" : "badge-gray" %>
+            <span class="<%= badge_cls %> flex-shrink-0"><%= t.priority.upcase %></span>
+          </div>
+        </div>
+      <% end %>
+      <% if @support_tickets.empty? %>
+        <div class="px-5 py-8 text-center text-gray-400 text-sm">No urgent tickets — all quiet! 🎉</div>
+      <% end %>
+    </div>
+  </div>
+</div>

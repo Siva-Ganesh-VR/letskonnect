@@ -1,0 +1,19 @@
+<div class="mb-6"><h1 class="text-2xl font-bold">All Registrations</h1></div>
+<div class="table-wrapper">
+  <table class="data-table">
+    <thead><tr><th>Attendee</th><th>Event</th><th>Ticket</th><th>Code</th><th>Status</th><th>Date</th></tr></thead>
+    <tbody>
+      <% @registrations.each do |reg| %>
+        <tr>
+          <td><div class="font-medium"><%= reg.user.name %></div><div class="text-xs text-gray-400"><%= reg.user.email %></div></td>
+          <td><%= link_to reg.event.name, organizer_event_path(reg.event), class: "text-emerald-600 hover:underline text-sm" %></td>
+          <td><span class="badge-gray"><%= reg.ticket_tier.name %></span></td>
+          <td><span class="font-mono text-xs font-bold"><%= reg.code %></span></td>
+          <td><% if reg.checked_in? %><span class="badge-green">Checked in</span><% else %><span class="badge-amber">Registered</span><% end %></td>
+          <td class="text-xs text-gray-400"><%= reg.created_at.strftime("%b %-d, %Y") %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+<%== pagy_nav(@pagy) if @pagy.pages > 1 %>

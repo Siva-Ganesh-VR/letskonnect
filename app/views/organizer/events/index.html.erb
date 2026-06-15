@@ -1,0 +1,51 @@
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold text-gray-900">Events</h1>
+  <%= link_to new_organizer_event_path, class: "btn-primary flex items-center gap-2" do %>
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    Create event
+  <% end %>
+</div>
+
+<% if @events.empty? %>
+  <div class="card p-16 text-center">
+    <svg class="w-12 h-12 mx-auto text-gray-200 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+    <p class="text-gray-500 mb-4">No events yet.</p>
+    <%= link_to "Create your first event", new_organizer_event_path, class: "btn-primary" %>
+  </div>
+<% else %>
+  <div class="card overflow-hidden">
+    <% @events.each do |ev| %>
+      <div class="event-row">
+        <% if ev.hero_image.present? %>
+          <img src="<%= ev.hero_image %>" alt="" class="event-thumb">
+        <% else %>
+          <div class="event-thumb flex items-center justify-center text-gray-200 bg-gray-50">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          </div>
+        <% end %>
+        <div class="flex-1 min-w-0">
+          <%= link_to ev.name, organizer_event_path(ev), class: "font-medium text-gray-900 hover:text-emerald-600 truncate block" %>
+          <div class="text-xs text-gray-400 mt-0.5"><%= ev.date_range %> · <%= ev.location %></div>
+        </div>
+        <div class="flex items-center gap-4 flex-shrink-0">
+          <% if ev.live? %>
+            <span class="badge-green flex items-center gap-1.5"><span class="live-dot"></span>Live</span>
+          <% elsif ev.published? %>
+            <span class="badge-green">Published</span>
+          <% else %>
+            <span class="badge-gray"><%= ev.status.capitalize %></span>
+          <% end %>
+          <div class="text-sm text-gray-500 w-28 text-right">
+            <span class="font-semibold text-gray-900"><%= ev.registration_count %></span> registered
+          </div>
+          <div class="text-sm font-semibold text-gray-900 w-20 text-right">
+            $<%= number_with_delimiter(ev.revenue_cents / 100) %>
+          </div>
+          <%= link_to organizer_event_path(ev), class: "btn-icon" do %>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>
